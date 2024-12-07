@@ -128,3 +128,11 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# Add to .gitignore (if not already there)
+artifacts/
+cache/
+typechain-types/
+.env
+.env.example
+*.code-workspace
