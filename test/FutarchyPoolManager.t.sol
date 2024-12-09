@@ -44,9 +44,11 @@ contract FutarchyPoolManagerTest is Test {
             address(ctfAdapter),
             address(balancerWrapper),
             address(outcomeToken),
-            address(moneyToken)
+            address(moneyToken),
+            false,        // _useEnhancedSecurity
+            owner         // use owner for admin
         );
-
+        
         // Setup initial tokens
         vm.startPrank(user);
         outcomeToken.mint(user, 1000 ether);
