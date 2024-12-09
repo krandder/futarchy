@@ -36,6 +36,41 @@ contract GnosisCTFAdapter {
         wrapped1155Factory = IWrapped1155Factory(_wrapped1155Factory);
     }
 
+    // Add the missing function
+    function getWrappedTokens(
+        IERC20 collateralToken,
+        bytes32 conditionId,
+        uint256 outcomeCount
+    ) external view returns (address[] memory addresses) {
+        if (outcomeCount <= 1) revert InvalidOutcomeCount(outcomeCount);
+        
+        addresses = new address[](outcomeCount);
+        uint256[] memory partition = new uint256[](outcomeCount);
+        
+        for(uint256 i = 0; i < outcomeCount; i++) {
+            partition[i] = 1 << i;
+            
+            uint256 positionId = conditionalTokens.getPositionId(
+                collateralToken,
+                conditionalTokens.getCollectionId(bytes32(0), conditionId, partition[i])
+            );
+            
+            bytes memory tokenData = abi.encodePacked(
+                _generateTokenName(collateralToken, i, outcomeCount),
+                _generateTokenSymbol(collateralToken, i, outcomeCount),
+                hex"12"
+            );
+
+            addresses[i] = address(wrapped1155Factory.getWrapped1155(
+                IERC20(address(conditionalTokens)),
+                positionId,
+                tokenData
+            ));
+        }
+
+        return addresses;
+    }
+
     function splitCollateralTokens(
         IERC20 collateralToken,
         bytes32 conditionId,
