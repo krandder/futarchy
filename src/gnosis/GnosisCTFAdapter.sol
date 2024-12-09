@@ -170,7 +170,8 @@ contract GnosisCTFAdapter {
 
         return payoutAmount;
     }
-function _generateTokenName(
+
+    function _generateTokenName(
         IERC20 collateralToken,
         uint256 outcomeIndex,
         uint256 totalOutcomes
