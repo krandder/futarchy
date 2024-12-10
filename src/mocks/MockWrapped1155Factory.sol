@@ -10,7 +10,7 @@ contract MockWrapped1155Factory is IWrapped1155Factory {
     function requireWrapped1155(
         IERC20 token,
         uint256 tokenId,
-        bytes calldata data
+        bytes calldata /*data*/
     ) external returns (address) {
         bytes32 key = keccak256(abi.encodePacked(token, tokenId));
         if (wrappedTokens[key] == address(0)) {
@@ -23,7 +23,7 @@ contract MockWrapped1155Factory is IWrapped1155Factory {
     function getWrapped1155(
         IERC20 token,
         uint256 tokenId,
-        bytes calldata data
+        bytes calldata /*data*/
     ) external view returns (address) {
         bytes32 key = keccak256(abi.encodePacked(token, tokenId));
         // Return same deterministic address as requireWrapped1155

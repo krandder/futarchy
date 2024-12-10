@@ -427,75 +427,87 @@ contract ExpressionContract {
 		if (variableIds.length != variableValues.length) revert LengthMismatch();
 
 		// Ensure all variable values are 0 or SCALE
+		// Cannot simplify expressions with values settled to intermediate values
 		for (uint256 i = 0; i < variableValues.length; i++) {
-			uint256 value = variableValues[i];
-			if (value != 0 && value != SCALE) revert InvalidBooleanValue(value);
+			uint256 val = variableValues[i];
+			if (val != 0 && val != SCALE) revert InvalidBooleanValue(val);
 		}
 
 		Expression storage expr = _getExpression(expressionId);
-		uint256[][] memory newConjunctions = new uint256[][](expr.conjunctions.length);
+		uint256 conjCount = expr.conjunctions.length;
+
+		// Prepare a new set of conjunctions after simplification
+		uint256[][] memory newConjunctions = new uint256[][](conjCount);
 		uint256 newConjCount = 0;
 
-		for (uint256 i = 0; i < expr.conjunctions.length; i++) {
-			uint256[] memory conj = expr.conjunctions[i];
-			bool removeConj = false;
-			uint256[] memory newLiterals = new uint256[](conj.length);
-			uint256 litCount = 0;
-
-			for (uint256 j = 0; j < conj.length; j++) {
-				uint256 literal = conj[j];
-				uint256 varId = literal & ((1 << 255) - 1);
-				bool isNegated = (literal & (1 << 255)) != 0;
-				uint256 settledValue = 0;
-				bool isSettled = false;
-
-				// Check if variable is settled
-				for (uint256 k = 0; k < variableIds.length; k++) {
-					if (variableIds[k] == varId) {
-						settledValue = variableValues[k];
-						isSettled = true;
-						break;
-					}
-				}
-
-				if (isSettled) {
-					uint256 value = settledValue;
-					if (isNegated) {
-						value = SCALE - value;
-					}
-
-					if (value == 0) {
-						// Literal evaluates to false, remove the entire conjunction
-						removeConj = true;
-						break;
-					} else {
-						// value == SCALE (according to the initial check)
-						// Literal evaluates to true, omit it from the conjunction
-						continue;
-					}
-				} else {
-					// Variable not settled, keep the literal
-					newLiterals[litCount++] = literal;
-				}
-			}
-
+		for (uint256 i = 0; i < conjCount; i++) {
+			(bool removeConj, uint256[] memory finalConj) = _simplifyConjunction(expr.conjunctions[i], variableIds, variableValues);
 			if (!removeConj) {
-				// Add the simplified conjunction
-				uint256[] memory finalConj = new uint256[](litCount);
-				for (uint256 l = 0; l < litCount; l++) {
-					finalConj[l] = newLiterals[l];
-				}
 				newConjunctions[newConjCount++] = finalConj;
 			}
 		}
 
-		// Create the simplified expression
+		// Resize final array
 		uint256[][] memory finalConjunctions = new uint256[][](newConjCount);
 		for (uint256 m = 0; m < newConjCount; m++) {
 			finalConjunctions[m] = newConjunctions[m];
 		}
 
 		simplifiedExprId = _createExpression(finalConjunctions);
+	}
+
+	function _simplifyConjunction(
+		uint256[] memory conj,
+		uint256[] memory variableIds,
+		uint256[] memory variableValues
+	) internal pure returns (bool removeConj, uint256[] memory finalConj) {
+		uint256[] memory tempLiterals = new uint256[](conj.length);
+		uint256 litCount = 0;
+
+		for (uint256 j = 0; j < conj.length; j++) {
+			uint256 literal = conj[j];
+			(bool isSettled, uint256 settledVal) = _getSettledValue(literal, variableIds, variableValues);
+
+			if (isSettled) {
+				// If settledVal == 0, this literal is false => entire conjunction is removed
+				if (settledVal == 0) {
+					return (true, new uint256[](0));
+				}
+				// Else settledVal == SCALE (this function cannot be called with intermediate values)
+				// So literal is true => omit this literal and continue
+			} else {
+				// Variable not settled, keep this literal
+				tempLiterals[litCount++] = literal;
+			}
+		}
+
+		// Conjunction not removed
+		finalConj = new uint256[](litCount);
+		for (uint256 x = 0; x < litCount; x++) {
+			finalConj[x] = tempLiterals[x];
+		}
+		removeConj = false;
+	}
+
+	function _getSettledValue(
+		uint256 literal,
+		uint256[] memory variableIds,
+		uint256[] memory variableValues
+	) internal pure returns (bool, uint256) {
+		uint256 varId = literal & ((1 << 255) - 1);
+		bool isNegated = (literal & (1 << 255)) != 0;
+
+		for (uint256 k = 0; k < variableIds.length; k++) {
+			if (variableIds[k] == varId) {
+				uint256 settledVal = variableValues[k];
+				if (isNegated) {
+					settledVal = SCALE - settledVal;
+				}
+				return (true, settledVal);
+			}
+		}
+
+		return (false, 0);
 	}
 	
 	function expressionsHaveIntersection(
@@ -635,21 +647,6 @@ contract ExpressionContract {
 	) public view returns (uint256) {
 		Expression storage expr = _getExpression(expressionId);
 		return ExpressionEvaluatorLib.evaluateExpressionWithValues(expr.conjunctions, variableIds, variableValues);
-	}
-
-
-    /**
-     * @notice Attempts to evaluate the entire expression
-     * @dev May revert if expression is too complex for gas limits
-     */
-	function tryEvaluateExpression(
-		uint256 expressionId,
-		uint256[] memory variableIds,
-		uint256[] memory variableValues
-	) public view returns (uint256) {
-		Expression storage expr = _getExpression(expressionId);
-		// Just reuse evaluateExpressionWithValues or a similar function
-		return evaluateExpressionWithValues(expressionId, variableIds, variableValues);
 	}
 
     /**

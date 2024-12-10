@@ -21,7 +21,7 @@ contract MockBalancerPoolWrapper is IBalancerPoolWrapper {
     function createPool(
         address tokenA,
         address tokenB,
-        uint256 weight
+        uint256 /*weight*/
     ) external returns (address pool) {
         pool = address(uint160(_nextPoolId++));
         pools[pool] = PoolInfo({
