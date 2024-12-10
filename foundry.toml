@@ -17,3 +17,10 @@ bracket_spacing = true
 [profile.ci]
 verbosity = 4
 fuzz_runs = 1000
+
+
+[rpc_endpoints]
+gnosis = "https://rpc.gnosischain.com"
+
+[etherscan]
+gnosis = {key = "{$ETHERSCAN_KEY}"}

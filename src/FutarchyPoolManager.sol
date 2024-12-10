@@ -45,6 +45,11 @@ contract FutarchyPoolManager {
     error Unauthorized();
     error SplitNotAllowed();
 
+    // Add events for tracking
+    event SplitAllowed(address baseToken, address splitToken1, address splitToken2);
+    event SplitPerformed(address baseToken, address splitToken1, address splitToken2);
+    event MergePerformed(address baseToken, address splitToken1, address splitToken2);
+
     modifier onlyAdmin() {
         if (msg.sender != admin) revert Unauthorized();
         _;
@@ -66,22 +71,34 @@ contract FutarchyPoolManager {
         admin = _admin;
     }
 
-    // Allows the admin to register an allowed split
-    // This restricts which token triples can be formed during splits if enhanced security is on.
-    function addAllowedSplit(
-        address baseToken,
-        address yesToken,
-        address noToken
-    ) external onlyAdmin {
-        bytes32 key = keccak256(abi.encodePacked(baseToken, yesToken, noToken));
-        allowedSplits[key] = true;
-    }
-
+    
     function _checkAllowedSplit(address baseTok, address yesTok, address noTok) internal view {
         bytes32 key = keccak256(abi.encodePacked(baseTok, yesTok, noTok));
         if (!allowedSplits[key]) {
             revert SplitNotAllowed();
         }
+    }
+
+    // Allows the admin to register an allowed split
+    // This restricts which token triples can be formed during splits if enhanced security is on.
+    function addAllowedSplit(
+        address baseToken,
+        address splitToken1,
+        address splitToken2
+    ) external onlyAdmin {
+        bytes32 splitKey = keccak256(abi.encodePacked(baseToken, splitToken1, splitToken2));
+        allowedSplits[splitKey] = true;
+        
+        emit SplitAllowed(baseToken, splitToken1, splitToken2);
+    }
+
+    function _enforceSplitAllowed(
+        address baseToken,
+        address splitToken1,
+        address splitToken2
+    ) internal view {
+        bytes32 key = keccak256(abi.encodePacked(baseToken, splitToken1, splitToken2));
+        if (!allowedSplits[key]) revert SplitNotAllowed();
     }
 
     function createBasePool(
