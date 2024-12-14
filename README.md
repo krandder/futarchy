@@ -1,66 +1,20 @@
-## Foundry
+# Futarchy Smart Contracts
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+This repository contains the core smart contracts for the Futarchy protocol, enabling market-based governance through conditional token markets.
 
-Foundry consists of:
+## Core Components
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+### Pool Management
+`FutarchyPoolManager`: Handles the creation, splitting, and merging of liquidity pools for conditional markets. Works with various pool protocols through adapters.
 
-## Documentation
+### Conditional Token Framework
+`ICTFAdapter`: Interface for splitting and merging conditional tokens
+`GnosisCTFAdapter`: Implementation for Gnosis Conditional Token Framework
 
-https://book.getfoundry.sh/
+### Oracle and Governance
+`FAOOracle`: Provides market recommendations based on TWAP pricing
+`FAOGovernor`: Executes governance actions based on oracle recommendations
 
-## Usage
-
-### Build
-
-```shell
-$ forge build
-```
-
-### Test
-
-```shell
-$ forge test
-```
-
-### Format
-
-```shell
-$ forge fmt
-```
-
-### Gas Snapshots
-
-```shell
-$ forge snapshot
-```
-
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+### Proposal System
+`DualAuctionManager`: Manages auctions for proposal rights
+`ProposalManager`: Handles proposal creation and execution
