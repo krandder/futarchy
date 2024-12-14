@@ -1,20 +1,28 @@
-# Futarchy Smart Contracts
+# Futarchy Protocol Smart Contracts
 
-This repository contains the core smart contracts for the Futarchy protocol, enabling market-based governance through conditional token markets.
+This repository contains the core smart contracts for the Futarchy protocol, enabling market-based governance through conditional token markets. The protocol is currently under active development.
 
-## Core Components
+## Directory Structure
 
-### Pool Management
-`FutarchyPoolManager`: Handles the creation, splitting, and merging of liquidity pools for conditional markets. Works with various pool protocols through adapters.
+### Core Components
+- `src/FutarchyPoolManager.sol`: Manages conditional pools for market creation
+- `src/pools/BalancerPoolWrapper.sol`: Balancer pool integration
 
 ### Conditional Token Framework
-`ICTFAdapter`: Interface for splitting and merging conditional tokens
-`GnosisCTFAdapter`: Implementation for Gnosis Conditional Token Framework
+- `src/interfaces/ICTFAdapter.sol`: Interface for conditional token operations
+- `src/gnosis/GnosisCTFAdapter.sol`: Implementation for Gnosis CTF
 
-### Oracle and Governance
-`FAOOracle`: Provides market recommendations based on TWAP pricing
-`FAOGovernor`: Executes governance actions based on oracle recommendations
+### Optimizer Module
+- `src/optimizer/FaoGovernor.sol`: Governance execution contract
+- `src/optimizer/FaoOracleSafe.sol`: Oracle for market evaluations
+- `src/optimizer/ProposalManager.sol`: Handles proposal lifecycle
+- `src/optimizer/DualAuctionManager.sol`: Manages proposal right auctions
+- `src/optimizer/FAOToken.sol`: Protocol token implementation
+- `src/optimizer/FAOIco.sol`: Token distribution contract
 
-### Proposal System
-`DualAuctionManager`: Manages auctions for proposal rights
-`ProposalManager`: Handles proposal creation and execution
+### Combinatorial Framework
+- `src/combinatorial/`: Advanced combinatorial market framework (WIP)
+
+## Development Status
+
+This repository is under active development. Installation and development instructions will be added soon.
