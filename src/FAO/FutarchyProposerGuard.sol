@@ -3,25 +3,12 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./interfaces/IConditionalTokens.sol";
-import "./interfaces/IWrapped1155Factory.sol";
+import "../interfaces/IConditionalTokens.sol";
+import "../interfaces/IWrapped1155Factory.sol";
+import "../interfaces/IUniswapV3Pool.sol";
 import "./FutarchyOracle.sol";
 import "./FutarchyGovernor.sol";
 import "./ProposalManager.sol";
-
-interface IUniswapV3Pool {
-    function token0() external view returns (address);
-    function token1() external view returns (address);
-    function slot0() external view returns (
-        uint160 sqrtPriceX96,
-        int24 tick,
-        uint16 observationIndex,
-        uint16 observationCardinality,
-        uint16 observationCardinalityNext,
-        uint8 feeProtocol,
-        bool unlocked
-    );
-}
 
 contract FutarchyProposerGuard is Ownable {
     IConditionalTokens public immutable conditionalTokens;
