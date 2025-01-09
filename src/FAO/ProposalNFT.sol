@@ -57,7 +57,10 @@ contract ProposalNFT is ERC721 {
      */
     function setMetadata(uint256 tokenId, string calldata metadata) external {
         require(msg.sender == artist, "Only artist");
-        require(_exists(tokenId), "Token doesn't exist");
+
+        // This will revert automatically if tokenId hasn't been minted yet.
+        ownerOf(tokenId);
+
         require(bytes(tokenMetadata[tokenId]).length == 0, "Metadata already set");
         tokenMetadata[tokenId] = metadata;
     }
