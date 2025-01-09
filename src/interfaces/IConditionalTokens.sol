@@ -42,4 +42,5 @@ interface IConditionalTokens {
     ) external view returns (bytes32);
     
     function payoutDenominator(bytes32 conditionId) external view returns (uint);
+    function payoutNumerators(bytes32 conditionId) external view returns (uint256[] memory);
 }
