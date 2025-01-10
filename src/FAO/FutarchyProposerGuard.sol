@@ -3,25 +3,12 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./interfaces/IConditionalTokens.sol";
-import "./interfaces/IWrapped1155Factory.sol";
+import "./ProposalNFT.sol";
+import "../interfaces/IConditionalTokens.sol";
+import "../interfaces/IWrapped1155Factory.sol";
 import "./FutarchyOracle.sol";
 import "./FutarchyGovernor.sol";
 import "./ProposalManager.sol";
-
-interface IUniswapV3Pool {
-    function token0() external view returns (address);
-    function token1() external view returns (address);
-    function slot0() external view returns (
-        uint160 sqrtPriceX96,
-        int24 tick,
-        uint16 observationIndex,
-        uint16 observationCardinality,
-        uint16 observationCardinalityNext,
-        uint8 feeProtocol,
-        bool unlocked
-    );
-}
 
 contract FutarchyProposerGuard is Ownable {
     IConditionalTokens public immutable conditionalTokens;
@@ -47,10 +34,10 @@ contract FutarchyProposerGuard is Ownable {
     constructor(
         address _conditionalTokens,
         address _wrapped1155Factory,
-        address _governor,
+        address payable _governor,
         uint256 _minimumOracleLiquidity,
         address _initialProposer,
-        address _proposalManager
+        address payable _proposalManager
     ) Ownable(msg.sender) {
         conditionalTokens = IConditionalTokens(_conditionalTokens);
         wrapped1155Factory = IWrapped1155Factory(_wrapped1155Factory);
@@ -81,36 +68,39 @@ contract FutarchyProposerGuard is Ownable {
         bytes32 yesCollection = conditionalTokens.getCollectionId(bytes32(0), conditionId, 1);
         bytes32 noCollection = conditionalTokens.getCollectionId(bytes32(0), conditionId, 2);
         
-        uint256 yesOutcomePositionId = conditionalTokens.getPositionId(address(outcomeToken), yesCollection);
-        uint256 noOutcomePositionId = conditionalTokens.getPositionId(address(outcomeToken), noCollection);
-        uint256 yesCurrencyPositionId = conditionalTokens.getPositionId(address(currencyToken), yesCollection);
-        uint256 noCurrencyPositionId = conditionalTokens.getPositionId(address(currencyToken), noCollection);
+        uint256 yesOutcomePositionId = conditionalTokens.getPositionId(IERC20(address(outcomeToken)), yesCollection);
+        uint256 noOutcomePositionId = conditionalTokens.getPositionId(IERC20(address(outcomeToken)), noCollection);
+        uint256 yesCurrencyPositionId = conditionalTokens.getPositionId(IERC20(address(currencyToken)), yesCollection);
+        uint256 noCurrencyPositionId = conditionalTokens.getPositionId(IERC20(address(currencyToken)), noCollection);
         
         address yesOutcomeToken = wrapped1155Factory.getWrapped1155(
-            address(conditionalTokens),
+            IERC20(address(conditionalTokens)),
             yesOutcomePositionId,
             ""
         );
         address noOutcomeToken = wrapped1155Factory.getWrapped1155(
-            address(conditionalTokens),
+            IERC20(address(conditionalTokens)),
             noOutcomePositionId,
             ""
         );
         address yesCurrencyToken = wrapped1155Factory.getWrapped1155(
-            address(conditionalTokens),
+            IERC20(address(conditionalTokens)),
             yesCurrencyPositionId,
             ""
         );
         address noCurrencyToken = wrapped1155Factory.getWrapped1155(
-            address(conditionalTokens),
+            IERC20(address(conditionalTokens)),
             noCurrencyPositionId,
             ""
         );
 
-        address yesToken0 = IUniswapV3Pool(yesPool).token0();
-        address yesToken1 = IUniswapV3Pool(yesPool).token1();
-        address noToken0 = IUniswapV3Pool(noPool).token0();
-        address noToken1 = IUniswapV3Pool(noPool).token1();
+        IUniswapV3Pool yesPoolContract = IUniswapV3Pool(yesPool);
+        IUniswapV3Pool noPoolContract = IUniswapV3Pool(noPool);
+
+        address yesToken0 = yesPoolContract.token0();
+        address yesToken1 = yesPoolContract.token1();
+        address noToken0 = noPoolContract.token0();
+        address noToken1 = noPoolContract.token1();
 
         require(
             (yesToken0 == yesOutcomeToken && yesToken1 == yesCurrencyToken) ||
@@ -135,7 +125,14 @@ contract FutarchyProposerGuard is Ownable {
         (address oracleAddress,,,) = conditionalTokens.conditions(conditionId);
         require(oracleAddress == address(oracle), "Wrong oracle");
 
-        (IUniswapV3Pool passPool, IUniswapV3Pool failPool,,,,) = oracle.conditions(conditionId);
+        (
+            IUniswapV3Pool passPool,
+            IUniswapV3Pool failPool,
+            uint256 minLiquidity,
+            uint256 createdAt,
+            FutarchyOracle.ResolutionState state,
+            bool priceCheckPassed
+        ) = oracle.conditions(conditionId);
         require(address(passPool) != address(0), "Condition not initialized");
 
         verifyPools(
@@ -150,7 +147,6 @@ contract FutarchyProposerGuard is Ownable {
         (uint160 noSqrtPrice,,,,,,) = failPool.slot0();
         require(yesSqrtPrice == noSqrtPrice, "Initial prices must match");
 
-        (,,,,uint256 minLiquidity) = oracle.getConditionState(conditionId);
         require(minLiquidity >= minimumOracleLiquidity, "Insufficient min liquidity");
 
         return true;
@@ -186,10 +182,16 @@ contract FutarchyProposerGuard is Ownable {
 
         proposalManager.markNFTUsed(nftId);
 
+        (
+            IUniswapV3Pool passPool,
+            IUniswapV3Pool failPool,
+            ,,,
+        ) = oracle.conditions(conditionId);
+
         emit ProposalValidated(
             conditionId,
-            address(oracle.conditions(conditionId).passPool),
-            address(oracle.conditions(conditionId).failPool)
+            address(passPool),
+            address(failPool)
         );
 
         return proposalId;

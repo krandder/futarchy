@@ -42,4 +42,15 @@ interface IConditionalTokens {
     ) external view returns (bytes32);
     
     function payoutDenominator(bytes32 conditionId) external view returns (uint);
+
+    function payoutNumerators(bytes32 conditionId) external view returns (uint256[] memory);
+    
+    function reportPayouts(bytes32 conditionId, uint256[] calldata payouts) external;
+
+    function conditions(bytes32 conditionId) external view returns (
+        address oracle,
+        bytes32 questionId,
+        uint outcomeSlotCount,
+        uint payoutNumerator
+    );
 }

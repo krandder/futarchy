@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "./interfaces/IConditionalTokens.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "../interfaces/IConditionalTokens.sol";
 
 contract FutarchyGovernor {
     // Core contracts

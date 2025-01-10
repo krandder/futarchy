@@ -7,14 +7,29 @@ import "../interfaces/IConditionalTokens.sol";
 contract MockConditionalTokens is IConditionalTokens {
     mapping(bytes32 => uint256) public outcomeSlotCounts;
     mapping(bytes32 => uint256) private _payoutDenominators;
-    
+    mapping(bytes32 => uint256[]) private _payoutNumerators;
+    mapping(bytes32 => ConditionData) private _conditions;
+
+    struct ConditionData {
+        address oracle;
+        bytes32 questionId;
+        uint outcomeSlotCount;
+        uint payoutNumerator;
+    }
+
     function prepareCondition(
         address oracle,
         bytes32 questionId,
         uint outcomeSlotCount
-    ) external {
+    ) external override {
         bytes32 conditionId = getConditionId(oracle, questionId, outcomeSlotCount);
         outcomeSlotCounts[conditionId] = outcomeSlotCount;
+        _conditions[conditionId] = ConditionData({
+            oracle: oracle,
+            questionId: questionId,
+            outcomeSlotCount: outcomeSlotCount,
+            payoutNumerator: 0
+        });
     }
 
     function getConditionId(
@@ -82,5 +97,23 @@ contract MockConditionalTokens is IConditionalTokens {
 
     function getOutcomeSlotCount(bytes32 conditionId) external view returns (uint) {
         return outcomeSlotCounts[conditionId];
+    }
+
+    function payoutNumerators(bytes32 conditionId) external view returns (uint256[] memory) {
+        return _payoutNumerators[conditionId];
+    }
+    
+    function reportPayouts(bytes32 conditionId, uint256[] calldata payouts) external {
+        _payoutNumerators[conditionId] = payouts;
+    }
+
+    function conditions(bytes32 conditionId) external view returns (
+        address oracle,
+        bytes32 questionId,
+        uint outcomeSlotCount,
+        uint payoutNumerator
+    ) {
+        ConditionData storage data = _conditions[conditionId];
+        return (data.oracle, data.questionId, data.outcomeSlotCount, data.payoutNumerator);
     }
 }
