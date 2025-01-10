@@ -8,7 +8,7 @@ optimizer_runs = 200
 via_ir = true
 remappings = [
     "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
-    "@chainlink/contracts/=lib/chainlink/contracts/src/"
+    "@chainlink/contracts/=lib/chainlink/contracts/"
 ]
 
 [fmt]
