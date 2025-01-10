@@ -29,13 +29,13 @@ contract DeployFutarchy is Script {
     FutarchyOracle public futarchyOracle;
     FutarchyGovernor public futarchyGovernor;
     FutarchyProposerGuard public futarchyProposerGuard;
-    
+
     // External addresses (to be set in the constructor or read from environment)
-    address public constant CONDITIONAL_TOKENS = 0xCeAfDD6bc0bEF976fdCd1112955828E00543c0Ce;  // Gnosis Chain
+    address public constant CONDITIONAL_TOKENS = 0xCeAfDD6bc0bEF976fdCd1112955828E00543c0Ce; // Gnosis Chain
     address public constant WRAPPED_1155_FACTORY = 0x191Ccf8B088120082b127002e59d701b684C338c; // Gnosis Chain
-    address public constant BALANCER_VAULT = 0xBA12222222228d8Ba445958a75a0704d566BF2C8;      // Gnosis Chain
+    address public constant BALANCER_VAULT = 0xBA12222222228d8Ba445958a75a0704d566BF2C8; // Gnosis Chain
     address public constant CHAINLINK_VRF_COORDINATOR = address(0); // Replace with actual VRF coordinator
-    
+
     // Configuration parameters
     uint64 public constant VRF_SUBSCRIPTION_ID = 1;
     bytes32 public constant VRF_KEY_HASH = 0x0000000000000000000000000000000000000000000000000000000000000000; // Replace with actual key hash
@@ -49,10 +49,7 @@ contract DeployFutarchy is Script {
         vm.startBroadcast(deployerPrivateKey);
 
         // 1. Deploy GnosisCTFAdapter
-        gnosisCTFAdapter = new GnosisCTFAdapter(
-            CONDITIONAL_TOKENS,
-            WRAPPED_1155_FACTORY
-        );
+        gnosisCTFAdapter = new GnosisCTFAdapter(CONDITIONAL_TOKENS, WRAPPED_1155_FACTORY);
 
         // 2. Deploy BalancerPoolWrapper
         balancerPoolWrapper = new BalancerPoolWrapper(BALANCER_VAULT);
@@ -63,25 +60,18 @@ contract DeployFutarchy is Script {
             address(balancerPoolWrapper),
             address(0), // outcomeToken - to be set by admin
             address(0), // moneyToken - to be set by admin
-            true,      // useEnhancedSecurity
-            deployer   // admin
+            true, // useEnhancedSecurity
+            deployer // admin
         );
 
         // 4. Deploy ProposalNFT
         proposalNFT = new ProposalNFT(deployer);
 
         // 5. Deploy FutarchyRandomFailure
-        futarchyRandomFailure = new FutarchyRandomFailure(
-            CHAINLINK_VRF_COORDINATOR,
-            VRF_SUBSCRIPTION_ID,
-            VRF_KEY_HASH
-        );
+        futarchyRandomFailure = new FutarchyRandomFailure(CHAINLINK_VRF_COORDINATOR, VRF_SUBSCRIPTION_ID, VRF_KEY_HASH);
 
         // 6. Deploy FutarchyOracle
-        futarchyOracle = new FutarchyOracle(
-            address(futarchyRandomFailure),
-            CONDITIONAL_TOKENS
-        );
+        futarchyOracle = new FutarchyOracle(address(futarchyRandomFailure), CONDITIONAL_TOKENS);
 
         // 7. Deploy FutarchyGovernor (without ProposerGuard initially)
         futarchyGovernor = new FutarchyGovernor(
@@ -107,10 +97,7 @@ contract DeployFutarchy is Script {
         );
 
         // 10. Deploy final ProposalManager (with real ProposerGuard)
-        proposalManager = new ProposalManager(
-            address(proposalNFT),
-            address(futarchyProposerGuard)
-        );
+        proposalManager = new ProposalManager(address(proposalNFT), address(futarchyProposerGuard));
 
         vm.stopBroadcast();
 
@@ -127,4 +114,4 @@ contract DeployFutarchy is Script {
         console.log("ProposalManager:", address(proposalManager));
         console.log("FutarchyProposerGuard:", address(futarchyProposerGuard));
     }
-} 
+}
