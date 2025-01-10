@@ -20,9 +20,8 @@ bracket_spacing = true
 verbosity = 4
 fuzz_runs = 1000
 
-
 [rpc_endpoints]
 gnosis = "https://rpc.gnosischain.com"
 
 [etherscan]
-gnosis = {key = "{$ETHERSCAN_KEY}"}
+gnosis = { key = "${ETHERSCAN_KEY}", url = "https://api.gnosisscan.io/api" }
