@@ -11,39 +11,39 @@ contract ProposalNFT is ERC721 {
     address public owner;
     address public artist;
     address public minter;
-    
+
     mapping(uint256 => string) public tokenMetadata;
-    
+
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
     event MinterUpdated(address indexed previousMinter, address indexed newMinter);
     event ArtistUpdated(address indexed previousArtist, address indexed newArtist);
-    
+
     modifier onlyOwner() {
         require(msg.sender == owner, "Not owner");
         _;
     }
-    
+
     constructor(address _artist) ERC721("Futarchy Proposal", "FPROP") {
         owner = msg.sender;
         artist = _artist;
     }
-    
+
     function transferOwnership(address newOwner) external onlyOwner {
         require(newOwner != address(0), "Zero address");
         emit OwnershipTransferred(owner, newOwner);
         owner = newOwner;
     }
-    
+
     function setMinter(address newMinter) external onlyOwner {
         emit MinterUpdated(minter, newMinter);
         minter = newMinter;
     }
-    
+
     function setArtist(address newArtist) external onlyOwner {
         emit ArtistUpdated(artist, newArtist);
         artist = newArtist;
     }
-    
+
     /**
      * @notice Mints a new proposal NFT to `to`.
      */
@@ -51,7 +51,7 @@ contract ProposalNFT is ERC721 {
         require(msg.sender == minter, "Only minter");
         _mint(to, tokenId);
     }
-    
+
     /**
      * @notice Sets metadata for a given tokenId.
      */
