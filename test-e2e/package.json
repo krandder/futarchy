@@ -1,0 +1,13 @@
+{
+  "name": "futarchy-e2e-test",
+  "version": "1.0.0",
+  "scripts": {
+    "start-ganache": "ganache --port 8545 --deterministic",
+    "test-e2e": "mocha test/e2e/E2E.test.js --timeout 100000"
+  },
+  "devDependencies": {
+    "ganache": "^7.7.0",
+    "mocha": "^10.2.0",
+    "web3": "^1.10.0"
+  }
+} 
